@@ -8,6 +8,7 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +18,11 @@ import { colores, tipografia, espaciado, bordes, sombras } from '../theme';
 import { NavegacionActivacion } from '../navigation/types';
 
 // Completa la sesión web si la app fue abierta desde el navegador
-WebBrowser.maybeCompleteAuthSession();
+try {
+  WebBrowser.maybeCompleteAuthSession();
+} catch (e) {
+  console.log('Error en maybeCompleteAuthSession:', e);
+}
 
 // Endpoint de la AGETIC (Entorno de pruebas)
 const discovery = {
@@ -25,7 +30,7 @@ const discovery = {
   tokenEndpoint: 'https://proveedor.ciudadania.demo.agetic.gob.bo/token',
 };
 
-const CLIENT_ID = 'JYTTEsTy6sNkl6dw0QA6KvJMkSL1CNKBXee-wb7mSm2';
+const CLIENT_ID = 'JYTTEsTy6sNkI6dw0QA6KvJMkSL1CNKBXee-wb7mSm2';
 const REDIRECT_URI = 'bo.edu.uto.carnetdigital:/oauth2redirect';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
@@ -49,6 +54,32 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
     },
     discovery
   );
+
+  // Listener nativo de fuerza bruta para lidiar con el formato exigido por AGETIC (una sola barra)
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      const url = event.url;
+      if (url && url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
+        // Cerramos el navegador interno a la fuerza
+        WebBrowser.dismissBrowser();
+        
+        // Extraemos el código secreto
+        const codeMatch = url.match(/[?&]code=([^&]+)/);
+        if (codeMatch && codeMatch[1]) {
+          const code = codeMatch[1];
+          const codeVerifier = request?.codeVerifier || '';
+          handleProcesarCodigo(code, codeVerifier);
+        }
+      }
+    };
+
+    const sub = Linking.addEventListener('url', handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => sub.remove();
+  }, [request]);
 
   useEffect(() => {
     if (response?.type === 'success') {
@@ -121,7 +152,35 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
         <View style={estilos.seccionBoton}>
           <TouchableOpacity
             style={[estilos.botonEscanear, (!request || loading) && estilos.botonDeshabilitado]}
-            onPress={() => promptAsync()}
+            onPress={async () => {
+              try {
+                // Intentar abrir el navegador seguro embebido (Chrome Custom Tabs)
+                const result = await promptAsync();
+                // Si el usuario cancela o hay un problema que no tira excepcion, intentamos atraparlo
+                if (result.type !== 'success' && result.type !== 'cancel') {
+                  throw new Error('El navegador embebido falló.');
+                }
+              } catch (e: any) {
+                // Si el dispositivo no soporta navegadores embebidos o falla, ofrecemos abrir externamente
+                Alert.alert(
+                  'Aviso de Navegador',
+                  'Tu dispositivo tiene problemas usando el navegador interno seguro. ¿Deseas abrir la página de activación en tu navegador externo (Chrome, Firefox, etc.)?',
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { 
+                      text: 'Abrir Externamente', 
+                      onPress: () => {
+                        if (request?.url) {
+                          Linking.openURL(request.url).catch(err => {
+                            Alert.alert('Error', 'No se pudo abrir ningún navegador.');
+                          });
+                        }
+                      }
+                    }
+                  ]
+                );
+              }
+            }}
             disabled={!request || loading}
             activeOpacity={0.82}
           >
