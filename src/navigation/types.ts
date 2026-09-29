@@ -12,8 +12,8 @@ import { RouteProp } from '@react-navigation/native';
 export type RootStackParamList = {
   /** Primera pantalla — visible mientras el dispositivo no esté activado */
   PantallaActivacion: undefined;
-  /** Procesamiento de la activación QR — recibe el qrToken */
-  PantallaCargando: { qrToken: string };
+  /** Procesamiento de la activación OAuth — recibe el authCode */
+  PantallaCargando: { authCode: string; codeVerifier: string };
   /** Navegador de pestañas — accesible solo con dispositivo activado */
   TabPrincipal: undefined;
 };

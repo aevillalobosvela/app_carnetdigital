@@ -27,7 +27,7 @@ interface Props {
 // ─── Componente ───────────────────────────────────────────────────────────────
 export function PantallaCargando({ navigation }: Props): React.JSX.Element {
   const route = useRoute<RoutePropCargando>();
-  const { qrToken } = route.params;
+  const { authCode, codeVerifier } = route.params;
   const { activarSession } = useAuth();
 
   // Animación de pulso del logo
@@ -73,7 +73,7 @@ export function PantallaCargando({ navigation }: Props): React.JSX.Element {
         setMensajeEstado('Vinculando dispositivo...');
         
         // Petición POST al backend
-        await authService.activar(qrToken);
+        await authService.activar(authCode, codeVerifier);
         
         setMensajeEstado('Activación exitosa. Cargando...');
         

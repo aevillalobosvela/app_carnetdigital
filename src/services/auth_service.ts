@@ -34,11 +34,12 @@ export class AuthService {
   /**
    * Activa el carnet del estudiante vinculando el dispositivo móvil (Primera carrera)
    */
-  async activar(qrToken: string) {
+  async activar(authCode: string, codeVerifier: string) {
     const deviceToken = await this.getDeviceToken();
 
     const response = await api.post('app/activar', {
-      qrToken,
+      authCode,
+      codeVerifier,
       deviceToken,
     });
 
