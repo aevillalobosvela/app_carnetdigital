@@ -139,7 +139,7 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
 
   const iniciales = datos ? calcularIniciales(datos.nombreCompleto) : '';
 
-  const handleDesactivarDispositivo = () => {
+  const handleCerrarSesion = () => {
     setConfirmadoCheckbox(false);
     setModalVisible(true);
   };
@@ -272,21 +272,21 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
           />
         </Seccion>
 
-        {/* ── Botón desactivar dispositivo ── */}
+        {/* ── Botón cerrar sesión ── */}
         <TouchableOpacity
           style={estilos.botonDesactivar}
-          onPress={handleDesactivarDispositivo}
+          onPress={handleCerrarSesion}
           activeOpacity={0.8}
-          accessibilityLabel="Desactivar este dispositivo"
+          accessibilityLabel="Cerrar sesión en este dispositivo"
           accessibilityRole="button"
         >
-          <Ionicons name="power-outline" size={20} color={colores.blanco} />
-          <Text style={estilos.botonDesactivarTexto}>Desactivar dispositivo</Text>
+          <Ionicons name="log-out-outline" size={20} color={colores.blanco} />
+          <Text style={estilos.botonDesactivarTexto}>Cerrar sesión</Text>
         </TouchableOpacity>
 
-        {/* Nota informativa sobre la desactivación */}
+        {/* Nota informativa sobre el cierre de sesión */}
         <Text style={estilos.notaDesactivacion}>
-          Al desactivar, deberás acudir a la DTIC para obtener un nuevo QR y reactivar la app.
+          Podrás volver a ingresar en este celular usando tu cuenta de Ciudadanía Digital sin realizar ningún pago de reposición.
         </Text>
 
         {/* Espacio inferior */}
@@ -294,7 +294,7 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
 
       </ScrollView>
 
-      {/* Modal de confirmación de desactivación */}
+      {/* Modal de confirmación de cierre de sesión */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -304,40 +304,20 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
         <View style={estilos.overlayModal}>
           <View style={estilos.contenidoModal}>
             <View style={estilos.modalHeader}>
-              <Ionicons name="warning-outline" size={24} color={colores.acento} />
-              <Text style={estilos.modalTitulo}>Confirmar Desactivación</Text>
+              <Ionicons name="log-out-outline" size={24} color={colores.acento} />
+              <Text style={estilos.modalTitulo}>Confirmar Cierre de Sesión</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={estilos.botonCerrarModal}>
                 <Ionicons name="close" size={20} color={colores.grisSecundario} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={estilos.modalScroll} showsVerticalScrollIndicator={false}>
-              <View style={estilos.tarjetaAdvertencia}>
-                <Ionicons name="alert-circle-outline" size={20} color="#721C24" style={{ marginRight: 8, marginTop: 2 }} />
-                <Text style={estilos.tituloAdvertencia}>¡ADVERTENCIA IMPORTANTE!</Text>
-              </View>
               <Text style={estilos.modalIntroduccion}>
-                Al desactivar este dispositivo, se cerrará tu sesión de forma permanente y el carnet digital quedará <Text style={{ fontWeight: 'bold', color: colores.error }}>INACTIVO</Text> en el servidor.
+                La aplicación dejará de mostrar tu carnet hasta que vuelvas a ingresar.
               </Text>
               <Text style={estilos.modalConsecuencia}>
-                Para reactivarlo en un nuevo teléfono o en este mismo, según las políticas de la universidad, deberás comprar un <Text style={{ fontWeight: 'bold' }}>NUEVO pago de reposición de carnet universitario</Text> y acudir a las oficinas de la DTIC.
+                Tu dispositivo seguirá vinculado y <Text style={{ fontWeight: 'bold' }}>NO</Text> consumirás un nuevo valor de reposición al regresar usando este mismo celular.
               </Text>
-
-              {/* Checkbox de confirmación */}
-              <TouchableOpacity
-                style={estilos.contenedorCheckbox}
-                onPress={() => setConfirmadoCheckbox(prev => !prev)}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={confirmadoCheckbox ? 'checkbox' : 'square-outline'}
-                  size={24}
-                  color={confirmadoCheckbox ? colores.primario : colores.grisSecundario}
-                />
-                <Text style={estilos.textoCheckbox}>
-                  Entiendo las consecuencias y acepto desactivar el dispositivo.
-                </Text>
-              </TouchableOpacity>
             </ScrollView>
 
             <View style={estilos.modalAcciones}>
@@ -350,10 +330,7 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  estilos.botonConfirmarModal,
-                  !confirmadoCheckbox && estilos.botonConfirmarModalDeshabilitado
-                ]}
+                style={estilos.botonConfirmarModal}
                 onPress={async () => {
                   setModalVisible(false);
                   const fullyLoggedOut = await logoutSession();
@@ -361,10 +338,9 @@ export function PantallaAjustes({ navigation }: Props): React.JSX.Element {
                     await cargarDatos();
                   }
                 }}
-                disabled={!confirmadoCheckbox}
                 activeOpacity={0.8}
               >
-                <Text style={estilos.textoBotonConfirmar}>Desactivar</Text>
+                <Text style={estilos.textoBotonConfirmar}>Cerrar sesión</Text>
               </TouchableOpacity>
             </View>
           </View>

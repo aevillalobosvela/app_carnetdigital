@@ -131,15 +131,18 @@ function LogoDTIC(): React.JSX.Element {
   );
 }
 
-/** Foto del estudiante o placeholder si fotoUrl es null */
+/** Foto del estudiante o placeholder si fotoUrl es null o falla al cargar */
 function FotoEstudiante({ fotoUrl }: { fotoUrl: string | null }): React.JSX.Element {
-  if (fotoUrl) {
+  const [errorCarga, setErrorCarga] = React.useState(false);
+
+  if (fotoUrl && !errorCarga) {
     return (
       <Image
         source={{ uri: fotoUrl }}
         style={estilos.foto}
         resizeMode="cover"
         accessibilityLabel="Fotografía del estudiante"
+        onError={() => setErrorCarga(true)}
       />
     );
   }

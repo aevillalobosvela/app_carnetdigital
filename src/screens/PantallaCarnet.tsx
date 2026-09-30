@@ -43,11 +43,7 @@ export function PantallaCarnet(): React.JSX.Element {
   const [indiceSesionActiva, setIndiceSesionActiva] = useState(0);
   const [cargandoSilencioso, setCargandoSilencioso] = useState(false);
 
-  // Estados del escáner para carrera paralela
-  const [escanearParalela, setEscanearParalela] = useState(false);
-  const [permisoCamara, requestPermisoCamara] = useCameraPermissions();
-  const haEscaneadoParalelaRef = useRef(false);
-  const [procesandoActivacionParalela, setProcesandoActivacionParalela] = useState(false);
+
 
   const carruselRef = useRef<ScrollView>(null);
   const ultimoFetchTimestampRef = useRef<number>(0);
@@ -214,23 +210,7 @@ export function PantallaCarnet(): React.JSX.Element {
     }
   };
 
-  // Abrir scanner para vincular segunda carrera (paralela)
-  const handleAbrirScannerParalela = async () => {
-    haEscaneadoParalelaRef.current = false;
-    if (!permisoCamara) return;
-    if (!permisoCamara.granted) {
-      const response = await requestPermisoCamara();
-      if (!response.granted) {
-        Alert.alert(
-          'Permiso de Cámara Requerido',
-          'Es necesario acceder a la cámara para poder escanear el código QR de activación de carrera paralela.',
-          [{ text: 'Entendido' }]
-        );
-        return;
-      }
-    }
-    setEscanearParalela(true);
-  };
+
 
   // Mantener sincronizado el carrusel con la sesión activa
   useEffect(() => {
@@ -469,7 +449,7 @@ export function PantallaCarnet(): React.JSX.Element {
                   carrera={sesion.carrera}
                   facultad={sesion.facultad}
                   gestionActiva={sesion.periodoAcademico}
-                  fotoUrl={datos?.digital || null}
+                  fotoUrl={`https://saga.uto.edu.bo/digital/${sesion.ci}.jpg`}
                   institucion="Universidad Técnica de Oruro"
                   fechaActivacion={datos?.activadoEn || null}
                   fechaExpiracion={datos?.expiraEn || null}
@@ -481,32 +461,13 @@ export function PantallaCarnet(): React.JSX.Element {
               </View>
             ))}
 
-            {/* Tarjeta para vincular carrera paralela */}
-            <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
-              <View style={estilos.tarjetaNuevaCarrera}>
-                <View style={estilos.tarjetaNuevaCarreraBorde}>
-                  <Ionicons name="add-circle-outline" size={40} color={colores.primario} />
-                  <Text style={estilos.tarjetaNuevaCarreraTitulo}>Carrera Paralela</Text>
-                  <Text style={estilos.tarjetaNuevaCarreraDesc}>
-                    ¿Tienes otra carrera activa? Adquiere tu pago de reposición de carnet universitario en SAGA y escanea tu QR DTIC aquí.
-                  </Text>
-                  <TouchableOpacity
-                    style={estilos.botonVincularParalela}
-                    onPress={handleAbrirScannerParalela}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="camera-outline" size={16} color={colores.blanco} />
-                    <Text style={estilos.botonVincularParalelaTexto}>Escanear QR</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
+
           </ScrollView>
 
           {/* Puntos Indicadores */}
           {listaSesiones.length > 1 && (
             <View style={estilos.indicadoresContenedor}>
-              {Array.from({ length: listaSesiones.length + 1 }).map((_, i) => (
+              {Array.from({ length: listaSesiones.length }).map((_, i) => (
                 <View
                   key={i}
                   style={[
@@ -690,85 +651,7 @@ export function PantallaCarnet(): React.JSX.Element {
         </View>
       </Modal>
 
-      {/* Modal de escaneo de carrera paralela */}
-      <Modal
-        visible={escanearParalela}
-        animationType="slide"
-        onRequestClose={() => setEscanearParalela(false)}
-      >
-        <View style={StyleSheet.absoluteFillObject}>
-          {permisoCamara?.granted && (
-            <CameraView
-              style={StyleSheet.absoluteFillObject}
-              facing="back"
-              onBarcodeScanned={async ({ data }) => {
-                if (data && !haEscaneadoParalelaRef.current) {
-                  haEscaneadoParalelaRef.current = true;
-                  setEscanearParalela(false);
 
-                  setProcesandoActivacionParalela(true);
-                  try {
-                    await authService.activarParalela(data);
-                    await cargarDatos();
-
-                    Alert.alert(
-                      'Activación Exitosa',
-                      'Tu carrera paralela ha sido vinculada correctamente.',
-                      [{ text: '¡Excelente!' }]
-                    );
-                  } catch (err: any) {
-                    Alert.alert(
-                      'Error de Activación',
-                      err.message || 'No se pudo vincular la carrera paralela. Verifica el código QR.',
-                      [{ text: 'Entendido' }]
-                    );
-                  } finally {
-                    setProcesandoActivacionParalela(false);
-                  }
-                }
-              }}
-            >
-              <SafeAreaView style={estilos.scannerOverlayContainer}>
-                <View style={estilos.scannerHeader}>
-                  <Text style={estilos.scannerTitulo}>Vincular Carrera Paralela</Text>
-                  <TouchableOpacity
-                    style={estilos.botonCerrarScanner}
-                    onPress={() => setEscanearParalela(false)}
-                  >
-                    <Ionicons name="close" size={28} color={colores.blanco} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={estilos.scannerTargetContainer}>
-                  <View style={estilos.scannerTargetBox}>
-                    <View style={[estilos.scannerEsquina, estilos.esquinaTL]} />
-                    <View style={[estilos.scannerEsquina, estilos.esquinaTR]} />
-                    <View style={[estilos.scannerEsquina, estilos.esquinaBL]} />
-                    <View style={[estilos.scannerEsquina, estilos.esquinaBR]} />
-                    <View style={estilos.scannerLaser} />
-                  </View>
-                </View>
-
-                <Text style={estilos.scannerInstruccionesText}>
-                  Apunte la cámara al código QR de activación de carrera paralela
-                </Text>
-              </SafeAreaView>
-            </CameraView>
-          )}
-        </View>
-      </Modal>
-
-      {/* Overlay de Carga de Activación Paralela */}
-      {procesandoActivacionParalela && (
-        <Modal transparent visible>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-            <View style={{ backgroundColor: colores.blanco, padding: 24, borderRadius: 12, alignItems: 'center', gap: 12 }}>
-              <ActivityIndicator size="large" color={colores.primario} />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: colores.grisTexto }}>Vinculando carrera paralela...</Text>
-            </View>
-          </View>
-        </Modal>
-      )}
 
     </SafeAreaView>
   );

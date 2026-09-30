@@ -39,6 +39,17 @@ const REDIRECT_URI = 'bo.edu.uto.carnetdigital:/oauth2redirect';
 const logoUto = require('../assets/logo/logo_uto.png');
 const logoCiudadania = require('../assets/logo/logo_ciudadania.png');
 
+// Evita que la página de AGETIC haga zoom automático al enfocar un input
+const INJECTED_JAVASCRIPT = `
+  (function() {
+    var meta = document.createElement('meta');
+    meta.setAttribute('name', 'viewport');
+    meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    document.getElementsByTagName('head')[0].appendChild(meta);
+  })();
+  true;
+`;
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Props {
   navigation: NavegacionActivacion;
@@ -176,22 +187,25 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
           </Text>
         </View>
 
-        {/* ── Modal con WebView (Para interceptar a AGETIC con total control) ── */}
-        <Modal visible={showWebview} animationType="slide" onRequestClose={() => setShowWebview(false)}>
-          <SafeAreaView style={{ flex: 1, backgroundColor: colores.grisClaro }} edges={['top', 'bottom']}>
-            <View style={estilos.webviewHeader}>
-              <TouchableOpacity onPress={() => setShowWebview(false)} style={estilos.webviewBotonCerrar}>
-                <Ionicons name="close" size={28} color={colores.primario} />
-                <Text style={estilos.webviewBotonTexto}>Cancelar</Text>
-              </TouchableOpacity>
-              <Text style={estilos.webviewTitulo}>Ciudadanía Digital</Text>
-              <View style={{ width: 60 }} />
-            </View>
-            <WebView
-              source={{ uri: request?.url || '' }}
-              originWhitelist={['*']}
-              incognito={true}
-              onError={(syntheticEvent) => {
+        {/* ── Vista superpuesta con WebView (Reemplaza a Modal para evitar bugs de teclado en Android) ── */}
+        {showWebview && (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colores.grisClaro, zIndex: 1000, elevation: 10 }]}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+              <View style={estilos.webviewHeader}>
+                <TouchableOpacity onPress={() => setShowWebview(false)} style={estilos.webviewBotonCerrar}>
+                  <Ionicons name="close" size={28} color={colores.primario} />
+                  <Text style={estilos.webviewBotonTexto}>Cancelar</Text>
+                </TouchableOpacity>
+                <Text style={estilos.webviewTitulo}>Ciudadanía Digital</Text>
+                <View style={{ width: 60 }} />
+              </View>
+              <WebView
+                source={{ uri: request?.url || '' }}
+                originWhitelist={['*']}
+                incognito={true}
+                injectedJavaScript={INJECTED_JAVASCRIPT}
+                keyboardDisplayRequiresUserAction={false}
+                onError={(syntheticEvent) => {
                 const { nativeEvent } = syntheticEvent;
                 if (nativeEvent.url && nativeEvent.url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
                   const codeMatch = nativeEvent.url.match(/[?&]code=([^&]+)/);
@@ -240,7 +254,8 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
               )}
             />
           </SafeAreaView>
-        </Modal>
+        </View>
+        )}
       </SafeAreaView>
     </View>
   );
