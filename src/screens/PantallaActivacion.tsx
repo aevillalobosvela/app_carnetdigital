@@ -37,6 +37,7 @@ const REDIRECT_URI = 'bo.edu.uto.carnetdigital:/oauth2redirect';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 const logoUto = require('../assets/logo/logo_uto.png');
+const logoCiudadania = require('../assets/logo/logo_ciudadania.png');
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Props {
@@ -47,13 +48,15 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [showWebview, setShowWebview] = useState(false);
   
-  // Hook de AuthSession
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: CLIENT_ID,
       scopes: ['openid', 'profile', 'offline_access'],
       redirectUri: REDIRECT_URI,
       responseType: AuthSession.ResponseType.Code,
+      extraParams: {
+        prompt: 'login'
+      }
     },
     discovery
   );
@@ -100,6 +103,13 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
               resizeMode="contain"
               accessibilityLabel="Logo Universidad Técnica de Oruro"
             />
+            <View style={estilos.logoSeparador} />
+            <Image
+              source={logoCiudadania}
+              style={estilos.logoAgetic}
+              resizeMode="contain"
+              accessibilityLabel="Logo Ciudadanía Digital"
+            />
           </View>
           <Text style={estilos.nombreInstitucion}>
             Universidad Técnica de Oruro
@@ -114,18 +124,19 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
 
         {/* ── Instrucciones de activación ── */}
         <View style={estilos.seccionInstrucciones}>
-          <View style={estilos.iconoActivacionContenedor}>
-            <Ionicons name="finger-print-outline" size={36} color={colores.blanco} />
-          </View>
-
-          <Text style={estilos.instruccionesTitulo}>
-            Activa tu carnet digital
-          </Text>
-
           <View style={estilos.pasos}>
-            <PasoActivacion numero="1" texto="Presiona el botón 'Ingresar con Ciudadanía Digital'." />
-            <PasoActivacion numero="2" texto="Inicia sesión con tus credenciales del Estado." />
-            <PasoActivacion numero="3" texto="Autoriza a la UTO para emitir tu carnet digital." />
+            <InfoActivacion 
+              icono="person-outline" 
+              texto="Debes contar previamente con un registro activo en Ciudadanía Digital." 
+            />
+            <InfoActivacion 
+              icono="shield-checkmark-outline" 
+              texto="¿Por qué la universidad requiere esto de mí? Para garantizar de forma oficial e inequívoca tu identidad estudiantil." 
+            />
+            <InfoActivacion 
+              icono="lock-closed-outline" 
+              texto="Tu carnet digital será emitido y vinculado exclusivamente a este dispositivo una vez ingreses." 
+            />
           </View>
         </View>
 
@@ -179,6 +190,7 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
             <WebView
               source={{ uri: request?.url || '' }}
               originWhitelist={['*']}
+              incognito={true}
               onError={(syntheticEvent) => {
                 const { nativeEvent } = syntheticEvent;
                 if (nativeEvent.url && nativeEvent.url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
@@ -235,16 +247,16 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
 }
 
 // ─── Sub-componente: paso numerado ───────────────────────────────────────────
-interface PasoActivacionProps {
-  numero: string;
+interface InfoActivacionProps {
+  icono: keyof typeof Ionicons.glyphMap;
   texto: string;
 }
 
-function PasoActivacion({ numero, texto }: PasoActivacionProps): React.JSX.Element {
+function InfoActivacion({ icono, texto }: InfoActivacionProps): React.JSX.Element {
   return (
     <View style={estilos.paso}>
       <View style={estilos.pasoBurbuja}>
-        <Text style={estilos.pasoNumero}>{numero}</Text>
+        <Ionicons name={icono} size={18} color={colores.blanco} />
       </View>
       <Text style={estilos.pasoTexto}>{texto}</Text>
     </View>
@@ -261,20 +273,19 @@ const estilos = StyleSheet.create({
     justifyContent: 'space-between',
   },
   encabezado: { alignItems: 'center', paddingTop: espaciado.md },
-  logoContenedor: { marginBottom: espaciado.md, ...sombras.lg },
+  logoContenedor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: espaciado.md },
   logoImagen: { width: 90, height: 90 },
+  logoAgetic: { width: 140, height: 55 },
+  logoSeparador: { width: 1, height: 60, backgroundColor: colores.grisMedio, marginHorizontal: espaciado.md },
   nombreInstitucion: { fontSize: tipografia.tamanios.lg, fontWeight: tipografia.pesos.bold, color: colores.primario, textAlign: 'center', marginBottom: espaciado.xs },
   subtitulo: { fontSize: tipografia.tamanios.sm, fontWeight: tipografia.pesos.medio, color: colores.acento, textAlign: 'center', letterSpacing: 0.5 },
-  separadorContenedor: { paddingVertical: espaciado.md },
+  separadorContenedor: { paddingVertical: espaciado.sm },
   separadorLinea: { height: 1, backgroundColor: colores.grisMedio },
   seccionInstrucciones: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: espaciado.md },
-  iconoActivacionContenedor: { width: 72, height: 72, borderRadius: bordes.radio.circular, backgroundColor: colores.primario, alignItems: 'center', justifyContent: 'center', marginBottom: espaciado.xs, ...sombras.md },
-  instruccionesTitulo: { fontSize: tipografia.tamanios.xl, fontWeight: tipografia.pesos.bold, color: colores.primario, textAlign: 'center' },
-  pasos: { width: '100%', gap: espaciado.sm, marginTop: espaciado.xs },
-  paso: { flexDirection: 'row', alignItems: 'flex-start', gap: espaciado.md },
-  pasoBurbuja: { width: 28, height: 28, borderRadius: bordes.radio.circular, backgroundColor: colores.primario, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
-  pasoNumero: { fontSize: tipografia.tamanios.sm, fontWeight: tipografia.pesos.bold, color: colores.blanco },
-  pasoTexto: { flex: 1, fontSize: tipografia.tamanios.sm, color: colores.grisTexto, lineHeight: tipografia.tamanios.sm * tipografia.alturaLinea.normal },
+  pasos: { width: '100%', gap: espaciado.md, marginTop: espaciado.xs },
+  paso: { flexDirection: 'row', alignItems: 'flex-start', gap: espaciado.md, backgroundColor: colores.blanco, padding: espaciado.md, borderRadius: bordes.radio.md, ...sombras.sm },
+  pasoBurbuja: { width: 34, height: 34, borderRadius: bordes.radio.circular, backgroundColor: colores.primario, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  pasoTexto: { flex: 1, fontSize: tipografia.tamanios.sm, color: colores.texto, lineHeight: tipografia.tamanios.sm * tipografia.alturaLinea.normal },
   seccionBoton: { alignItems: 'center', gap: espaciado.md, paddingBottom: espaciado.sm },
   botonEscanear: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0054A6', borderRadius: bordes.radio.lg, paddingVertical: espaciado.md, paddingHorizontal: espaciado.xl, width: '100%', gap: espaciado.sm, ...sombras.md },
   botonDeshabilitado: { opacity: 0.6 },
