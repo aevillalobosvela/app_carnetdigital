@@ -11,7 +11,7 @@ La aplicación móvil está dirigida a los estudiantes de la **Universidad Técn
 ### 1.1. Arquitectura Online-First
 La aplicación móvil funciona bajo una lógica estrictamente **online-first**:
 *   Los datos del carnet no se almacenan localmente en bases de datos SQLite u offline cache.
-*   En cada inicio de sesión o apertura de pantalla se realiza una petición al backend para consultar el estado del carnet en vivo y obtener la información académica actualizada.
+*   En cada inicio de sesión o apertura de pantalla se realiza una petición al backend para consultar el estado del carnet en vivo y obtener la información académica actualizada (ahora se verifica automáticamente contra `matricula.pagos`).
 *   Si el dispositivo no cuenta con conexión a internet al abrir la aplicación, se muestra una pantalla de error de conectividad bloqueando el acceso al carnet.
 *   No existe exportación a PDF ni mecanismos de almacenamiento offline.
 
@@ -71,7 +71,7 @@ mobile/
 Controla el flujo según el estado de la sesión y conectividad:
 
 *   `PantallaCargando`: Pantalla inicial que comprueba la existencia de un token local en `SecureStore` y verifica su validez contra el backend.
-*   `PantallaActivacion`: Se muestra si el dispositivo no está registrado. Permite abrir la cámara para escanear el QR único de activación.
+*   `PantallaActivacion`: Se muestra si el dispositivo no está registrado. Inicia el flujo OAuth2 (PKCE) con Ciudadanía Digital (AGETIC) integrando un `WebView` oculto que intercepta la redirección malformada obligatoria de AGETIC para evitar crasheos del sistema operativo Android.
 *   `PantallaEstadoCarnet`: Pantalla informativa que se muestra si el backend retorna `403` indicando que el carnet está `inactivo` o `expirado`.
 *   `PantallaBloqueo`: Se muestra si no hay conexión a internet disponible.
 *   `TabPrincipal`: Navegador de pestañas para estudiantes con carnet `activo`.

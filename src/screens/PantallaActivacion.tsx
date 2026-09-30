@@ -9,11 +9,13 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import { WebView } from 'react-native-webview';
 import { colores, tipografia, espaciado, bordes, sombras } from '../theme';
 import { NavegacionActivacion } from '../navigation/types';
 
@@ -43,6 +45,7 @@ interface Props {
 
 export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
   const [loading, setLoading] = useState(false);
+  const [showWebview, setShowWebview] = useState(false);
   
   // Hook de AuthSession
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -55,31 +58,9 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
     discovery
   );
 
-  // Listener nativo de fuerza bruta para lidiar con el formato exigido por AGETIC (una sola barra)
-  useEffect(() => {
-    const handleDeepLink = (event: { url: string }) => {
-      const url = event.url;
-      if (url && url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
-        // Cerramos el navegador interno a la fuerza
-        WebBrowser.dismissBrowser();
-        
-        // Extraemos el código secreto
-        const codeMatch = url.match(/[?&]code=([^&]+)/);
-        if (codeMatch && codeMatch[1]) {
-          const code = codeMatch[1];
-          const codeVerifier = request?.codeVerifier || '';
-          handleProcesarCodigo(code, codeVerifier);
-        }
-      }
-    };
+  // Ya no usamos el Listener nativo propenso a errores porque el WebView lo hará todo de forma segura
+  
 
-    const sub = Linking.addEventListener('url', handleDeepLink);
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
-
-    return () => sub.remove();
-  }, [request]);
 
   useEffect(() => {
     if (response?.type === 'success') {
@@ -152,33 +133,11 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
         <View style={estilos.seccionBoton}>
           <TouchableOpacity
             style={[estilos.botonEscanear, (!request || loading) && estilos.botonDeshabilitado]}
-            onPress={async () => {
-              try {
-                // Intentar abrir el navegador seguro embebido (Chrome Custom Tabs)
-                const result = await promptAsync();
-                // Si el usuario cancela o hay un problema que no tira excepcion, intentamos atraparlo
-                if (result.type !== 'success' && result.type !== 'cancel') {
-                  throw new Error('El navegador embebido falló.');
-                }
-              } catch (e: any) {
-                // Si el dispositivo no soporta navegadores embebidos o falla, ofrecemos abrir externamente
-                Alert.alert(
-                  'Aviso de Navegador',
-                  'Tu dispositivo tiene problemas usando el navegador interno seguro. ¿Deseas abrir la página de activación en tu navegador externo (Chrome, Firefox, etc.)?',
-                  [
-                    { text: 'Cancelar', style: 'cancel' },
-                    { 
-                      text: 'Abrir Externamente', 
-                      onPress: () => {
-                        if (request?.url) {
-                          Linking.openURL(request.url).catch(err => {
-                            Alert.alert('Error', 'No se pudo abrir ningún navegador.');
-                          });
-                        }
-                      }
-                    }
-                  ]
-                );
+            onPress={() => {
+              if (request?.url) {
+                setShowWebview(true);
+              } else {
+                Alert.alert('Info', 'La plataforma de Ciudadanía Digital está cargando. Por favor, intenta en unos segundos.');
               }
             }}
             disabled={!request || loading}
@@ -205,6 +164,71 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
             © 2026 DTIC - Universidad Técnica de Oruro
           </Text>
         </View>
+
+        {/* ── Modal con WebView (Para interceptar a AGETIC con total control) ── */}
+        <Modal visible={showWebview} animationType="slide" onRequestClose={() => setShowWebview(false)}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: colores.grisClaro }} edges={['top', 'bottom']}>
+            <View style={estilos.webviewHeader}>
+              <TouchableOpacity onPress={() => setShowWebview(false)} style={estilos.webviewBotonCerrar}>
+                <Ionicons name="close" size={28} color={colores.primario} />
+                <Text style={estilos.webviewBotonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <Text style={estilos.webviewTitulo}>Ciudadanía Digital</Text>
+              <View style={{ width: 60 }} />
+            </View>
+            <WebView
+              source={{ uri: request?.url || '' }}
+              originWhitelist={['*']}
+              onError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                if (nativeEvent.url && nativeEvent.url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
+                  const codeMatch = nativeEvent.url.match(/[?&]code=([^&]+)/);
+                  if (codeMatch && codeMatch[1]) {
+                    const code = codeMatch[1];
+                    const codeVerifier = request?.codeVerifier || '';
+                    setShowWebview(false);
+                    handleProcesarCodigo(code, codeVerifier);
+                  }
+                }
+              }}
+              onNavigationStateChange={(navState) => {
+                const { url } = navState;
+                if (url && url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
+                  const codeMatch = url.match(/[?&]code=([^&]+)/);
+                  if (codeMatch && codeMatch[1]) {
+                    const code = codeMatch[1];
+                    const codeVerifier = request?.codeVerifier || '';
+                    setShowWebview(false);
+                    handleProcesarCodigo(code, codeVerifier);
+                  }
+                }
+              }}
+              onShouldStartLoadWithRequest={(event) => {
+                const { url } = event;
+                
+                // ¡LA MAGIA! Interceptamos la URL malformada de una sola barra ANTES de que colapse
+                if (url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
+                  const codeMatch = url.match(/[?&]code=([^&]+)/);
+                  if (codeMatch && codeMatch[1]) {
+                    const code = codeMatch[1];
+                    const codeVerifier = request?.codeVerifier || '';
+                    setShowWebview(false); // Cerramos el WebView instantáneamente
+                    handleProcesarCodigo(code, codeVerifier);
+                  }
+                  return false; // Evita que el WebView siga intentando cargar la URL rota
+                }
+                
+                return true; // Si es la página normal de AGETIC, que siga cargando
+              }}
+              startInLoadingState={true}
+              renderLoading={() => (
+                <View style={estilos.webviewCargando}>
+                  <ActivityIndicator size="large" color={colores.primario} />
+                </View>
+              )}
+            />
+          </SafeAreaView>
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -258,4 +282,9 @@ const estilos = StyleSheet.create({
   notaActivacion: { fontSize: tipografia.tamanios.xs, color: colores.grisSecundario, textAlign: 'center', paddingHorizontal: espaciado.md, lineHeight: tipografia.tamanios.xs * tipografia.alturaLinea.normal },
   footer: { alignItems: 'center', paddingTop: espaciado.sm },
   footerTexto: { fontSize: tipografia.tamanios.xs, color: colores.grisDeshabilitado, textAlign: 'center' },
+  webviewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: espaciado.md, backgroundColor: colores.blanco, borderBottomWidth: 1, borderBottomColor: colores.grisMedio },
+  webviewBotonCerrar: { flexDirection: 'row', alignItems: 'center' },
+  webviewBotonTexto: { color: colores.primario, fontSize: tipografia.tamanios.md, marginLeft: 4 },
+  webviewTitulo: { fontSize: tipografia.tamanios.md, fontWeight: tipografia.pesos.bold, color: colores.texto },
+  webviewCargando: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)' },
 });

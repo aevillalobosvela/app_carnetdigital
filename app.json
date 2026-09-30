@@ -2,7 +2,6 @@
   "expo": {
     "name": "Carnet Digital UTO",
     "slug": "carnet-digital-uto",
-    "scheme": "bo.edu.uto.carnetdigital",
     "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",

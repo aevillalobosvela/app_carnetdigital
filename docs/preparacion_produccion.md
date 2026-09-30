@@ -87,6 +87,7 @@ Las siguientes mejoras implementadas son totalmente compatibles con producción 
 
 1. **Timeout de 30 Segundos (`api.ts`)**: Mantiene la tolerancia a conexiones móviles lentas en áreas universitarias de baja cobertura.
 2. **Lógica de Re-intento Idempotente (`AuthEstudianteController` en el Backend)**: Previene que la aplicación falle al intentar reactivar una sesión cuyo token se perdió debido a micro-cortes de internet, protegiendo al estudiante de consumir valores o aranceles adicionales por error.
+3. **Ausencia de `scheme` en `app.json`**: Se eliminó intencionalmente la propiedad `scheme` de `app.json` para evitar que EAS genere un Intent Filter en el `AndroidManifest.xml` (lo que causaba un crash grave con AGETIC). Esto se reemplazó por un `WebView` interceptor. (Ver `autenticacion_agetic.md` para más detalle).
 
 ---
 
