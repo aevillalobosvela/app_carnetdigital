@@ -112,7 +112,7 @@ export function PantallaCargando({ navigation }: Props): React.JSX.Element {
       animacionPulso.stop();
       clearInterval(intervaloPuntos);
     };
-  }, [qrToken, navigation, pulsoAnim, activarSession]);
+  }, [authCode, codeVerifier, navigation, pulsoAnim, activarSession]);
 
   // Construye la cadena de puntos según el estado actual
   const puntosTexto = '.'.repeat(puntos);

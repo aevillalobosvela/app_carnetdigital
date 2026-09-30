@@ -58,6 +58,7 @@ La integración también conllevó cambios importantes en la validación en el b
 
 - **Se abandonó la dependencia del estado manual 'pendiente':** Anteriormente un administrador DTIC debía pre-aprobar el carnet.
 - **Validación Automática (`matricula.pagos`):** Al recibir el código de AGETIC, el backend ahora verifica automáticamente contra la tabla `public.estudiantes` y `matricula.pagos`. Si el estudiante tiene la matrícula pagada para la gestión actual, la emisión y activación del carnet se hace instantáneamente.
+- **Extracción de CI mediante `/me`:** Descubrimos que el `id_token` inicial no incluye la cédula de identidad, solo un UUID interno. El backend realiza una segunda petición OAuth al endpoint `https://proveedor.../me` para obtener el perfil completo, extrayendo el CI del nodo `profile.documento_identidad.numero_documento`.
 - **Idempotencia:** Se agregó lógica para que, si el estudiante formatea su celular, pueda volver a escanear el carnet en el mismo dispositivo sin consumir otro cobro de arancel.
 
 ---
