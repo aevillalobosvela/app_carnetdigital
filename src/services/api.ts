@@ -82,9 +82,9 @@ export async function apiFetch(path: string, options: RequestInit & { skipLogout
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}/${path.replace(/^\//, '')}`;
 
-  // Configurar timeout de 30 segundos
+  // Configurar timeout de 15 segundos (como lo requiere Producción)
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
     const response = await fetch(url, {
@@ -127,8 +127,14 @@ export async function apiFetch(path: string, options: RequestInit & { skipLogout
   } catch (error: any) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new ApiError(408, 'El servidor tardó demasiado en responder (Tiempo de espera agotado)');
+      throw new ApiError(408, 'El servidor tardó demasiado en responder (Tiempo de espera agotado, máx 15s).');
     }
+    
+    // Detectar fallos de conexión (offline, dns, etc)
+    if (error.message && error.message.includes('Network request failed')) {
+      throw new ApiError(0, 'No tienes conexión a internet o el servidor está inaccesible. La conexión es obligatoria para poder usar el carnet.');
+    }
+
     throw error;
   }
 }

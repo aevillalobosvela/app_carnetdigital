@@ -206,17 +206,24 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
                 injectedJavaScript={INJECTED_JAVASCRIPT}
                 keyboardDisplayRequiresUserAction={false}
                 onError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                if (nativeEvent.url && nativeEvent.url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
-                  const codeMatch = nativeEvent.url.match(/[?&]code=([^&]+)/);
-                  if (codeMatch && codeMatch[1]) {
-                    const code = codeMatch[1];
-                    const codeVerifier = request?.codeVerifier || '';
+                  const { nativeEvent } = syntheticEvent;
+                  if (nativeEvent.url && nativeEvent.url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {
+                    const codeMatch = nativeEvent.url.match(/[?&]code=([^&]+)/);
+                    if (codeMatch && codeMatch[1]) {
+                      const code = codeMatch[1];
+                      const codeVerifier = request?.codeVerifier || '';
+                      setShowWebview(false);
+                      handleProcesarCodigo(code, codeVerifier);
+                    }
+                  } else {
+                    // Fallo de red genérico al cargar la página de AGETIC (ej: sin internet)
                     setShowWebview(false);
-                    handleProcesarCodigo(code, codeVerifier);
+                    Alert.alert(
+                      'Error de Conexión',
+                      'No se pudo cargar la página de Ciudadanía Digital. Asegúrate de tener conexión a internet.'
+                    );
                   }
-                }
-              }}
+                }}
               onNavigationStateChange={(navState) => {
                 const { url } = navState;
                 if (url && url.includes('bo.edu.uto.carnetdigital:/oauth2redirect')) {

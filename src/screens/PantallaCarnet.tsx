@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+
 import { colores, tipografia, espaciado, bordes, sombras } from '../theme';
 import { CarnetCard } from '../components/CarnetCard';
 import { carnetService, CarnetInfo } from '../services/carnet_service';
