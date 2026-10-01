@@ -23,9 +23,7 @@
       "package": "bo.edu.uto.carnetdigital",
       "versionCode": 10,
       "jsEngine": "hermes",
-      "permissions": [
-        "android.permission.CAMERA"
-      ],
+      "permissions": [],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_MEDIA_IMAGES",
@@ -37,12 +35,7 @@
     },
     "plugins": [
       "expo-secure-store",
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Permite el acceso a la cámara para poder escanear el código QR de activación de tu carnet digital."
-        }
-      ],
+
       "expo-font",
       [
         "expo-build-properties",
