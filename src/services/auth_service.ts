@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { api, apiFetch } from './api';
+import { registrarNotificacionesPushAsync } from './notificaciones';
 
 // Función para generar un UUID v4 simple sin dependencias externas
 function generateUUID(): string {
@@ -62,6 +63,11 @@ export class AuthService {
         periodoAcademico: details.periodoAcademico || 'N/A',
       };
       await SecureStore.setItemAsync('active_credentials', JSON.stringify([session]));
+      
+      // Vincular el Token Push al CI del estudiante recién logueado
+      if (details.dip) {
+        await registrarNotificacionesPushAsync(details.dip);
+      }
     } catch (e) {
       console.warn('Error fetching carnet details for local session list:', e);
     }
@@ -115,6 +121,11 @@ export class AuthService {
       await SecureStore.setItemAsync('active_credentials', JSON.stringify(credentials));
       // Cambiar de inmediato a la nueva carrera activada
       await this.switchCredential(session.carnetId);
+
+      // Vincular el Token Push al CI del estudiante
+      if (details.dip) {
+        await registrarNotificacionesPushAsync(details.dip);
+      }
     } catch (e) {
       console.error('Error finalizando la activación paralela:', e);
       throw e;
@@ -141,6 +152,9 @@ export class AuthService {
       await SecureStore.deleteItemAsync('carnet_id');
       await SecureStore.deleteItemAsync('active_credentials');
       await SecureStore.deleteItemAsync('is_demo_mode');
+      
+      // Anonimizar el token Push (desvincular CI)
+      await registrarNotificacionesPushAsync();
     }
   }
 
@@ -181,6 +195,10 @@ export class AuthService {
       await SecureStore.deleteItemAsync('carnet_id');
       await SecureStore.deleteItemAsync('active_credentials');
       await SecureStore.deleteItemAsync('is_demo_mode');
+      
+      // Anonimizar el token Push (desvincular CI)
+      await registrarNotificacionesPushAsync();
+      
       return true; // Se deslogueó por completo
     }
   }

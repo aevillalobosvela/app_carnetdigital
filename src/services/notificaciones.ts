@@ -63,6 +63,7 @@ export async function registrarNotificacionesPushAsync(userCi?: string): Promise
         appId: 'carnet-digital',
         token,
         perfil: 'estudiante',
+        roles: ['estudiantes'],
         userCi: userCi || null,
         deviceOs: Platform.OS,
       });
