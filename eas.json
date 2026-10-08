@@ -12,14 +12,14 @@
       "distribution": "internal",
       "android": {
         "env": {
-          "EXPO_PUBLIC_API_URL": "http://192.168.3.122:3333/api/v1"
+          "EXPO_PUBLIC_API_URL": "https://api-servicios.uto.edu.bo/api/v1"
         }
       }
     },
     "production": {
       "android": {
         "env": {
-          "EXPO_PUBLIC_API_URL": "http://192.168.3.122:3333/api/v1"
+          "EXPO_PUBLIC_API_URL": "https://api-servicios.uto.edu.bo/api/v1"
         }
       }
     }

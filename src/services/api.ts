@@ -84,7 +84,7 @@ export async function apiFetch(path: string, options: RequestInit & { skipLogout
 
   // Configurar timeout de 15 segundos (como lo requiere Producción)
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
 
   try {
     const response = await fetch(url, {
@@ -127,7 +127,7 @@ export async function apiFetch(path: string, options: RequestInit & { skipLogout
   } catch (error: any) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new ApiError(408, 'El servidor tardó demasiado en responder (Tiempo de espera agotado, máx 15s).');
+      throw new ApiError(408, 'El servidor tardó demasiado en responder (Tiempo de espera agotado, máx 45s).');
     }
     
     // Detectar fallos de conexión (offline, dns, etc)

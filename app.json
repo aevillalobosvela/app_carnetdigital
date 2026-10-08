@@ -2,7 +2,7 @@
   "expo": {
     "name": "Carnet Digital UTO",
     "slug": "carnet-digital-uto",
-    "version": "1.1.0",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "bo.edu.uto.carnetdigital",
-      "versionCode": 16,
+      "versionCode": 18,
       "jsEngine": "hermes",
       "permissions": [],
       "blockedPermissions": [
@@ -32,6 +32,10 @@
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
+    },
+    "notification": {
+      "icon": "./src/assets/notification-icon.png",
+      "color": "#0B2545"
     },
     "plugins": [
       "expo-secure-store",
