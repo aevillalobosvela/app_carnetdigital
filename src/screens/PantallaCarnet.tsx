@@ -449,7 +449,7 @@ export function PantallaCarnet(): React.JSX.Element {
                   carrera={sesion.carrera}
                   facultad={sesion.facultad}
                   gestionActiva={sesion.periodoAcademico}
-                  fotoUrl={`https://saga.uto.edu.bo/digital/${sesion.ci}.jpg`}
+                  fotoUrl={datos?.digital?.startsWith('http') ? datos.digital : (datos?.dip ? `https://saga.uto.edu.bo/digital/${datos.dip}.jpg` : null)}
                   institucion="Universidad Técnica de Oruro"
                   fechaActivacion={datos?.activadoEn || null}
                   fechaExpiracion={datos?.expiraEn || null}

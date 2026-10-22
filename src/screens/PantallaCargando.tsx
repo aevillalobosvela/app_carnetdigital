@@ -91,9 +91,10 @@ export function PantallaCargando({ navigation }: Props): React.JSX.Element {
         animacionPulso.stop();
         clearInterval(intervaloPuntos);
 
+        const errorDetail = err.response ? JSON.stringify(err.response?.data || err.response) : JSON.stringify(err);
         Alert.alert(
-          'Error de Activación',
-          err.message || 'No se pudo conectar con el servidor universitario. Intente nuevamente.',
+          'Error de Activación (Debug)',
+          (err.message || 'Error desconocido') + '\n\nDetalles técnicos:\n' + errorDetail,
           [
             {
               text: 'Regresar',

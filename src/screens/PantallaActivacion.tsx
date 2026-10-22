@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Linking,
   Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,13 +27,13 @@ try {
   console.log('Error en maybeCompleteAuthSession:', e);
 }
 
-// Endpoint de la AGETIC (Entorno de pruebas)
+// Endpoint de la AGETIC (Entorno de producción oficial)
 const discovery = {
-  authorizationEndpoint: 'https://proveedor.ciudadania.demo.agetic.gob.bo/auth',
-  tokenEndpoint: 'https://proveedor.ciudadania.demo.agetic.gob.bo/token',
+  authorizationEndpoint: 'https://proveedor.ciudadaniadigital.bo/auth',
+  tokenEndpoint: 'https://proveedor.ciudadaniadigital.bo/token',
 };
 
-const CLIENT_ID = 'JYTTEsTy6sNkI6dw0QA6KvJMkSL1CNKBXee-wb7mSm2';
+const CLIENT_ID = '4bYglLLgYjoi8QUKNUvn7Gt34LSXJr10t11F03CmZEx';
 const REDIRECT_URI = 'bo.edu.uto.carnetdigital:/oauth2redirect';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
@@ -58,6 +59,19 @@ interface Props {
 export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [showWebview, setShowWebview] = useState(false);
+  
+  // Debug states
+  const [tapCount, setTapCount] = useState(0);
+  const [showDebugModal, setShowDebugModal] = useState(false);
+
+  const handleLogoTap = () => {
+    const newCount = tapCount + 1;
+    setTapCount(newCount);
+    if (newCount >= 5) {
+      setShowDebugModal(true);
+      setTapCount(0);
+    }
+  };
   
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -108,12 +122,14 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
         {/* ── Encabezado institucional ── */}
         <View style={estilos.encabezado}>
           <View style={estilos.logoContenedor}>
-            <Image
-              source={logoUto}
-              style={estilos.logoImagen}
-              resizeMode="contain"
-              accessibilityLabel="Logo Universidad Técnica de Oruro"
-            />
+            <TouchableWithoutFeedback onPress={handleLogoTap}>
+              <Image
+                source={logoUto}
+                style={estilos.logoImagen}
+                resizeMode="contain"
+                accessibilityLabel="Logo Universidad Técnica de Oruro"
+              />
+            </TouchableWithoutFeedback>
             <View style={estilos.logoSeparador} />
             <Image
               source={logoCiudadania}
@@ -263,6 +279,33 @@ export function PantallaActivacion({ navigation }: Props): React.JSX.Element {
           </SafeAreaView>
         </View>
         )}
+        {/* ── Modal Debug ── */}
+        <Modal visible={showDebugModal} transparent={true} animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10, width: '85%' }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#0054A6' }}>🛠 Panel de Debug</Text>
+              <Text style={{ fontSize: 14, marginBottom: 5 }}>
+                <Text style={{ fontWeight: 'bold' }}>EXPO_PUBLIC_API_URL:</Text>
+              </Text>
+              <Text style={{ fontSize: 12, color: '#666', marginBottom: 15 }}>
+                {process.env.EXPO_PUBLIC_API_URL || 'No definida'}
+              </Text>
+              <Text style={{ fontSize: 14, marginBottom: 5 }}>
+                <Text style={{ fontWeight: 'bold' }}>Cliente ID (AGETIC):</Text>
+              </Text>
+              <Text style={{ fontSize: 12, color: '#666', marginBottom: 20 }}>
+                {CLIENT_ID}
+              </Text>
+              <TouchableOpacity
+                style={{ backgroundColor: '#0054A6', padding: 10, borderRadius: 5, alignItems: 'center' }}
+                onPress={() => setShowDebugModal(false)}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </View>
   );
@@ -307,7 +350,7 @@ const estilos = StyleSheet.create({
   pasos: { width: '100%', gap: espaciado.md, marginTop: espaciado.xs },
   paso: { flexDirection: 'row', alignItems: 'flex-start', gap: espaciado.md, backgroundColor: colores.blanco, padding: espaciado.md, borderRadius: bordes.radio.md, ...sombras.sm },
   pasoBurbuja: { width: 34, height: 34, borderRadius: bordes.radio.circular, backgroundColor: colores.primario, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  pasoTexto: { flex: 1, fontSize: tipografia.tamanios.sm, color: colores.texto, lineHeight: tipografia.tamanios.sm * tipografia.alturaLinea.normal },
+  pasoTexto: { flex: 1, fontSize: tipografia.tamanios.sm, color: colores.grisTexto, lineHeight: tipografia.tamanios.sm * tipografia.alturaLinea.normal },
   seccionBoton: { alignItems: 'center', gap: espaciado.md, paddingBottom: espaciado.sm },
   botonEscanear: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0054A6', borderRadius: bordes.radio.lg, paddingVertical: espaciado.md, paddingHorizontal: espaciado.xl, width: '100%', gap: espaciado.sm, ...sombras.md },
   botonDeshabilitado: { opacity: 0.6 },
@@ -318,6 +361,6 @@ const estilos = StyleSheet.create({
   webviewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: espaciado.md, backgroundColor: colores.blanco, borderBottomWidth: 1, borderBottomColor: colores.grisMedio },
   webviewBotonCerrar: { flexDirection: 'row', alignItems: 'center' },
   webviewBotonTexto: { color: colores.primario, fontSize: tipografia.tamanios.md, marginLeft: 4 },
-  webviewTitulo: { fontSize: tipografia.tamanios.md, fontWeight: tipografia.pesos.bold, color: colores.texto },
+  webviewTitulo: { fontSize: tipografia.tamanios.md, fontWeight: tipografia.pesos.bold, color: colores.grisTexto },
   webviewCargando: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)' },
 });
